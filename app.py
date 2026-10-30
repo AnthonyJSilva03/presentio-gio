@@ -14,19 +14,18 @@ def mostrar_presente():
                 if (entry.isIntersecting) {
                     entry.target.style.opacity = '1';
                     entry.target.style.transform = 'translateY(0)';
+                } else {
+                    entry.target.style.opacity = '0';
+                    entry.target.style.transform = 'translateY(40px)';
                 }
-                // O "else" foi removido. Agora, uma vez que a foto aparece, ela fica fixa!
             });
-        }, { threshold: 0.01 }); // Aciona logo que 1% do elemento aparecer
+        }, { threshold: 0.1 });
 
         elementos.forEach(el => {
             if (el.innerHTML.includes('heart')) return;
             el.style.transition = 'opacity 0.8s ease-out, transform 0.8s ease-out';
-            
-            // 0.05 é o segredo: quase invisível, mas obriga o celular a carregar as fotos!
-            el.style.opacity = '0.05'; 
+            el.style.opacity = '0';
             el.style.transform = 'translateY(40px)';
-            
             observer.observe(el);
         });
     </script>
@@ -148,10 +147,12 @@ def mostrar_presente():
     st.write("")
     st.markdown("<h2 style='text-align: center; color: #333;'>Sendo felizes juntos há...</h2>", unsafe_allow_html=True)
 
-    # CRONÔMETRO
+    # CRONÔMETRO ATUALIZADO (Com meses e dias detalhados)
     crt1, crt2, crt3 = st.columns([1, 2, 1])
     with crt2:
-        data_passada_js = "new Date(2026, 7, 1, 0, 0, 0).getTime()"
+        # Data de início do namoro
+        data_passada_js = "new Date(2026, 7, 1, 0, 0, 0)"
+        
         contador_html = f"""
         <!DOCTYPE html>
         <html>
@@ -167,11 +168,14 @@ def mostrar_presente():
             }}
             .numbers {{ font-size: 40px; font-weight: bold; margin: 0; }}
             .labels {{ font-size: 14px; color: #555; margin-top: -5px; }}
+            .detalhado {{ font-size: 16px; font-weight: 600; color: #FF4B4B; margin-top: 15px; }}
+            hr {{ border: 0; border-top: 1px solid #ddd; margin: 15px 0; }}
             
             /* AQUI ESTÁ A MÁGICA PARA O CELULAR! */
             @media (max-width: 600px) {{
                 .numbers {{ font-size: 25px; }}
                 .labels {{ font-size: 11px; }}
+                .detalhado {{ font-size: 14px; }}
                 .timer-box {{ padding: 15px 10px; }}
             }}
         </style>
@@ -180,26 +184,64 @@ def mostrar_presente():
         <div class="timer-box">
             <p class="numbers" id="relogio">Calculando...</p>
             <p class="labels">Dias : Horas : Minutos : Segundos</p>
+            <hr>
+            <p class="detalhado" id="relogio-detalhado"></p>
         </div>  
         <script>
-            var startDate = {data_passada_js};
+            var startDate = {data_passada_js}.getTime();
+            var startObj = {data_passada_js}; // Objeto de data para calcular os meses
+
             setInterval(function() {{
-                var now = new Date().getTime();
+                var nowObj = new Date();
+                var now = nowObj.getTime();
+                
+                // 1. O Cálculo dos dias totais e segundos contínuos
                 var distance = now - startDate;
                 var days = Math.floor(distance / (1000 * 60 * 60 * 24));
                 var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                 var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
                 var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                
+                // 2. O Cálculo detalhado de Anos, Meses e Dias no calendário
+                var calcAnos = nowObj.getFullYear() - startObj.getFullYear();
+                var calcMeses = nowObj.getMonth() - startObj.getMonth();
+                var calcDias = nowObj.getDate() - startObj.getDate();
+
+                if (calcDias < 0) {{
+                    calcMeses--;
+                    // Pega a quantidade de dias do mês anterior para corrigir a conta
+                    var ultimoDiaMesAnterior = new Date(nowObj.getFullYear(), nowObj.getMonth(), 0).getDate();
+                    calcDias += ultimoDiaMesAnterior;
+                }}
+                if (calcMeses < 0) {{
+                    calcAnos--;
+                    calcMeses += 12;
+                }}
+
+                // Monta a frase detalhada
+                var textoDetalhado = "";
+                if (calcAnos > 0) textoDetalhado += calcAnos + (calcAnos === 1 ? " ano, " : " anos, ");
+                if (calcMeses > 0) textoDetalhado += calcMeses + (calcMeses === 1 ? " mês, " : " meses, ");
+                textoDetalhado += calcDias + (calcDias === 1 ? " dia e " : " dias e ");
+                textoDetalhado += hours + (hours === 1 ? " hora" : " horas");
+                textoDetalhado += " juntos ❤️";
+
+                // Adiciona os zeros na frente para o relógio principal
                 hours = hours < 10 ? "0" + hours : hours;
                 minutes = minutes < 10 ? "0" + minutes : minutes;
                 seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                // Joga os resultados na tela
                 document.getElementById("relogio").innerHTML = days + "d " + hours + "h " + minutes + "m " + seconds + "s ";
+                document.getElementById("relogio-detalhado").innerHTML = textoDetalhado;
             }}, 1000);
         </script>
         </body>
         </html>
         """
-        components.html(contador_html, height=150)
+        
+        # Aumentamos a altura (height) para 200 para caber o novo texto e a linha divisória sem cortar
+        components.html(contador_html, height=200)
 
     # CARTINHA
     msg1, msg2, msg3 = st.columns([1, 2, 1])
