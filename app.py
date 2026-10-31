@@ -5,6 +5,7 @@ import streamlit.components.v1 as components
 def mostrar_presente():
 
     # 1. O código JavaScript do "Improviso" (Scroll Reveal Dinâmico)
+    # 1. O código JavaScript do "Improviso" (Scroll Reveal Dinâmico - CORRIGIDO PARA CELULAR)
     scroll_reveal_js = """
     <script>
         const doc = window.parent.document;
@@ -14,18 +15,19 @@ def mostrar_presente():
                 if (entry.isIntersecting) {
                     entry.target.style.opacity = '1';
                     entry.target.style.transform = 'translateY(0)';
-                } else {
-                    entry.target.style.opacity = '0';
-                    entry.target.style.transform = 'translateY(40px)';
                 }
+                // O "else" foi removido. Agora, uma vez que a foto aparece, ela fica fixa!
             });
-        }, { threshold: 0.1 });
+        }, { threshold: 0.01 }); // Aciona logo que 1% do elemento aparecer
 
         elementos.forEach(el => {
             if (el.innerHTML.includes('heart')) return;
             el.style.transition = 'opacity 0.8s ease-out, transform 0.8s ease-out';
-            el.style.opacity = '0';
+            
+            // 0.05 é o segredo: quase invisível, mas obriga o celular a carregar as fotos!
+            el.style.opacity = '0.05'; 
             el.style.transform = 'translateY(40px)';
+            
             observer.observe(el);
         });
     </script>
